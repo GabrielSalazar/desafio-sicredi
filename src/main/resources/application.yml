@@ -1,0 +1,24 @@
+# Configurações do servidor
+server:
+  port: 8080
+
+# Configurações da aplicação
+app:
+  dummyjson:
+    base-url: https://dummyjson.com
+
+# Configurações de logging
+logging:
+  level:
+    br.com.salazar: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Configurações do Spring
+spring:
+  application:
+    name: desafio-sicredi
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: NON_NULL

@@ -1,5 +1,6 @@
 package br.com.salazar.service;
 
+import br.com.salazar.model.dto.UsersResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -7,12 +8,14 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
-public class RestService {
+public class UserService {
+
     @Autowired
     private RestTemplate restTemplate;
 
-    public void fazerChamadaRest() {
-        log.debug("Iniciando chamada REST");
-        // Implemente sua lógica de chamada REST aqui
+    private static final String API_URL = "https://dummyjson.com/users";
+
+    public UsersResponseDto getUsers() {
+        return restTemplate.getForObject(API_URL, UsersResponseDto.class);
     }
 }
