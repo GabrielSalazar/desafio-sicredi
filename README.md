@@ -1,6 +1,6 @@
 # Projeto de Testes - Desafio Sicredi
 
-API REST desenvolvida com Spring Boot para testes de endpoints.
+Projeto desenvolvido com Spring Boot para testes de endpoints, para a solução de um desafio do banco Sicredi.
 
 ## Requisitos
 
