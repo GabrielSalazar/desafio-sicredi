@@ -62,7 +62,7 @@ class AuthControllerTest {
     @Test
     void login_InvalidRequest_ReturnsUnauthorized() throws Exception {
         // Arrange
-        LoginRequestDto reqDto = new LoginRequestDto("", "");
+        LoginRequestDto reqDto = new LoginRequestDto("teste", "teste123");
         when(authService.authenticate(any()))
                 .thenThrow(new RuntimeException("Credenciais inválidas"));
 

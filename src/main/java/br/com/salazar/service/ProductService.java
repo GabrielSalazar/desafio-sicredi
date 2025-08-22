@@ -1,6 +1,5 @@
 package br.com.salazar.service;
-import br.com.salazar.model.dto.ProductsResponseDto;
-import br.com.salazar.model.dto.ErrorResponseDto;
+import br.com.salazar.model.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +53,57 @@ public class ProductService {
         }
     }
 
+    public ProductResponseDto createProduct(ProductCreateRequestDto body) {
+        String url = baseUrl + "/products/add";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<ProductCreateRequestDto> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<ProductResponseDto> response = restTemplate.exchange(
+                url, HttpMethod.POST, request, ProductResponseDto.class);
+
+        if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+            return response.getBody();
+        }
+        // A API retorna 201; se vier 200/qualquer outro, trate como inesperado
+        throw new RuntimeException("Falha ao criar produto (status: " + response.getStatusCode() + ")");
+    }
+
+    public ProductsResponseDto getAllProducts() {
+        String url = baseUrl + "/products";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<ProductsResponseDto> response = restTemplate.exchange(
+                url, HttpMethod.GET, request, ProductsResponseDto.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return response.getBody();
+        }
+        throw new RuntimeException("Falha ao buscar produtos (status: " + response.getStatusCode() + ")");
+    }
+
+    public ProductDto getProductById(Long id) {
+        String url = baseUrl + "/products/" + id;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<ProductDto> response = restTemplate.exchange(
+                url, HttpMethod.GET, request, ProductDto.class);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return response.getBody();
+        }
+        throw new RuntimeException("Falha ao buscar produto id=" + id + " (status: " + response.getStatusCode() + ")");
+    }
+
+
     private String extractMessage(String body, String defaultMsg) {
         try {
             // parse simples sem ObjectMapper, para manter o serviço independente
@@ -78,4 +128,5 @@ public class ProductService {
     public static class ForbiddenException extends RuntimeException {
         public ForbiddenException(String msg) { super(msg); }
     }
+
 }

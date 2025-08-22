@@ -1,5 +1,8 @@
 package br.com.salazar.service;
 
+import br.com.salazar.model.dto.ProductCreateRequestDto;
+import br.com.salazar.model.dto.ProductDto;
+import br.com.salazar.model.dto.ProductResponseDto;
 import br.com.salazar.model.dto.ProductsResponseDto;
 import br.com.salazar.service.ProductService.ForbiddenException;
 import br.com.salazar.service.ProductService.UnauthorizedException;
@@ -74,6 +77,105 @@ class ProductServiceTest {
         assertThatThrownBy(() -> service.getProducts("noPermission"))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("Authentication Problem");
+    }
+    @Test
+    void createProduct_Returns201AndBody() {
+        ProductCreateRequestDto req = new ProductCreateRequestDto();
+        req.setTitle("Perfume Oil");
+        req.setDescription("desc");
+        req.setPrice(13.0);
+        req.setDiscountPercentage(8.4);
+        req.setRating(4.26);
+        req.setStock(65);
+        req.setBrand("brand");
+        req.setCategory("fragrances");
+        req.setThumbnail("thumb");
+
+        ProductResponseDto body = new ProductResponseDto();
+        body.setId(101L);
+        ResponseEntity<ProductResponseDto> response =
+                new ResponseEntity<>(body, HttpStatus.CREATED);
+
+        when(restTemplate.exchange(
+                eq("https://dummyjson.com/products/add"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(ProductResponseDto.class)
+        )).thenReturn(response);
+
+        ProductResponseDto result = service.createProduct(req);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(101L);
+    }
+
+    @Test
+    void createProduct_UnexpectedStatus_ThrowsRuntimeException() {
+        ProductCreateRequestDto req = new ProductCreateRequestDto();
+        req.setTitle("x"); req.setDescription("y"); req.setPrice(1.0);
+        req.setDiscountPercentage(1.0); req.setRating(1.0);
+        req.setStock(1); req.setBrand("b"); req.setCategory("c"); req.setThumbnail("t");
+
+        ResponseEntity<ProductResponseDto> response =
+                new ResponseEntity<>(new ProductResponseDto(), HttpStatus.OK);
+
+        when(restTemplate.exchange(anyString(), any(), any(), eq(ProductResponseDto.class)))
+                .thenReturn(response);
+
+        assertThatThrownBy(() -> service.createProduct(req))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Falha ao criar produto");
+    }
+
+    @Test
+    void getAllProducts_OK_ReturnsBody() {
+        ProductsResponseDto body = new ProductsResponseDto();
+        ResponseEntity<ProductsResponseDto> ok =
+                new ResponseEntity<>(body, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                eq("https://dummyjson.com/products"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(ProductsResponseDto.class)
+        )).thenReturn(ok);
+
+        ProductsResponseDto result = service.getAllProducts();
+
+        assertThat(result).isNotNull();
+        verify(restTemplate, times(1)).exchange(anyString(), any(), any(), eq(ProductsResponseDto.class));
+    }
+
+    @Test
+    void getAllProducts_UnexpectedStatus_ThrowsRuntimeException() {
+        ResponseEntity<ProductsResponseDto> resp =
+                new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        when(restTemplate.exchange(anyString(), any(), any(), eq(ProductsResponseDto.class)))
+                .thenReturn(resp);
+
+        assertThatThrownBy(() -> service.getAllProducts())
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Falha ao buscar produtos");
+    }
+
+    @Test
+    void getProductById_OK_ReturnsBody() {
+        ProductDto body = new ProductDto();
+        body.setId(1L);
+        ResponseEntity<ProductDto> ok = new ResponseEntity<>(body, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                eq("https://dummyjson.com/products/1"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(ProductDto.class)
+        )).thenReturn(ok);
+
+        ProductDto result = service.getProductById(1L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
     }
 }
 
