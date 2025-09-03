@@ -129,4 +129,4 @@ mvn test
 - Isolamento com Mockito
 
 ## Considerações finais
-Projeto com foco em qualidade, segurança e manutenção fácil.
+Projeto com foco em qualidade, segurança e manutenção fácil, alguns pontos podem ser melhorados como  a criação de um report completo, documentação no código/comentarios.
