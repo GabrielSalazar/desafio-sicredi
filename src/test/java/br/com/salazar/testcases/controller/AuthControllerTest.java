@@ -1,17 +1,19 @@
-package br.com.salazar.controller;
+package br.com.salazar.testcases.controller;
 
+import br.com.salazar.controller.AuthController;
 import br.com.salazar.model.dto.LoginRequestDto;
 import br.com.salazar.model.dto.LoginResponseDto;
 import br.com.salazar.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.*;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -28,7 +30,6 @@ class AuthControllerTest {
     private AuthService authService;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-
     private LoginResponseDto dummyResponse;
 
     @BeforeEach
@@ -42,6 +43,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("login with valid request returns 201 Created")
     void login_ValidRequest_ReturnsCreatedWithBody() throws Exception {
         // Arrange
         LoginRequestDto reqDto = new LoginRequestDto("emilys", "emilyspass");
@@ -60,6 +62,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("login with invalid request returns 401 Unauthorized")
     void login_InvalidRequest_ReturnsUnauthorized() throws Exception {
         // Arrange
         LoginRequestDto reqDto = new LoginRequestDto("teste", "teste123");

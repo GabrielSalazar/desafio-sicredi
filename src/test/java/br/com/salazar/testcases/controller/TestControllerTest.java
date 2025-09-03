@@ -1,5 +1,6 @@
-package br.com.salazar.controller;
+package br.com.salazar.testcases.controller;
 import br.com.salazar.Application;
+import br.com.salazar.controller.TestController;
 import br.com.salazar.model.dto.TestResponseDto;
 import br.com.salazar.service.TestService;
 import org.junit.jupiter.api.DisplayName;

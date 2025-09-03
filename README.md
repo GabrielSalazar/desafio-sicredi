@@ -1,86 +1,132 @@
-# Projeto de Testes - Desafio Sicredi
 
-Projeto desenvolvido com Spring Boot para testes de endpoints, para a solução de um desafio do banco Sicredi.
+# Desafio Sicredi/DB - API de Produtos e Autenticação
 
-## Requisitos
-
-- Java 17+
-- Maven 3.8+
-- IDE compatível com Spring Boot (IntelliJ IDEA recomendado)
+## Descrição
+Projeto implementado em Java com Spring Boot para gerenciar produtos e autenticar usuários para a solução de um desafio do banco Sicredi.
 
 ## Tecnologias
-
-- Spring Boot
-- Spring Web
+- Java 17+
+- Spring Boot 3.x
 - Lombok
 - JUnit 5
 - Mockito
-  
-## Configuração
+- MockMvc
+- AssertJ
+- Jackson
+
+## Requisitos
+- Java 17+
+- Maven 3.8+
+- IDE compatível (recomendado IntelliJ IDEA)
+
+## Como executar
 
 1. Clone o repositório:
+
+```
 git clone https://github.com/GabrielSalazar/desafio-sicredi.git
 cd desafio-sicredi
+```
 
+2. Execute a aplicação:
 
-## Executando - Via Maven
+Via terminal:
+
+```
 mvn spring-boot:run
+```
 
-## Executando - Via IDE
-Execute a classe br.com.salazar.Application
+Via IDE:
 
-## Testando - Execute os testes com Maven
+Execute a classe `br.com.salazar.Application`
+
+3. Execute os testes:
+
+```
 mvn test
-ou
-mvn clean package
-java -jar target/desafio-sicredi-*.jar
+```
 
-## Testar endpoints (exemplos cURL)
-- Login
+## Endpoints
 
-curl -X POST http://localhost:8080/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"emilys","password":"emilyspass"}'
+### Autenticação
 
-## Produtos autenticado
+- POST `/auth/login`
 
-curl -X GET http://localhost:8080/auth/products \
-  -H "Authorization: Bearer <TOKEN>"
-## Produtos público
+### Produtos autenticados (permitem somente com token)
+
+- GET `/auth/products`
+- POST `/auth/products/add`
+
+### Produtos públicos
+
+- GET `/products`
+- GET `/products/{id}`
+- POST `/products/add`
+
+## Exemplos curl
+
+Login:
+
+```
+curl -X POST http://localhost:8080/auth/login   -H "Content-Type: application/json"   -d '{"username":"emilys","password":"emilypass"}'
+```
+
+Listar produtos autenticados:
+
+```
+curl -X GET http://localhost:8080/auth/products   -H "Authorization: Bearer <TOKEN>"
+```
+
+Listar produtos públicos:
+
+```
 curl -X GET http://localhost:8080/products
 curl -X GET http://localhost:8080/products/1
+```
 
-## Criar produto (público)
-curl -X POST http://localhost:8080/products/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title":"Perfume Oil",
-    "description":"Mega Discount...",
-    "price":13,
-    "discountPercentage":8.4,
-    "rating":4.26,
-    "stock":65,
-    "brand":"Impression of Acqua Di Gio",
-    "category":"fragrances",
-    "thumbnail":"https://i.dummyjson.com/data/products/11/thumnail.jpg"
+Criar produto público:
+
+```
+curl -X POST http://localhost:8080/products/add   -H "Content-Type: application/json"   -d '{
+    "title": "Perfume Oil",
+    "description": "Mega desconto",
+    "price": 13,
+    "discountPercentage": 8.4,
+    "rating": 4.26,
+    "stock": 65,
+    "brand": "Impression",
+    "category": "fragrances",
+    "thumbnail": "https://dummyimage.com/thumb.jpg"
   }'
+```
 
-## Cobertura de cenários:
-1. AuthControllerTest:
-- 201 para login com payload válido (service mock retorna sucesso)
-- 400 para payload inválido (Bean Validation)
-- 401 para credenciais inválidas (service lança exceção de autenticação)
+## Tipos de Testes
 
-2. ProductControllerTest (autenticado):
-- 200 com Bearer válido
-- 401 sem header ou token inválido
-- 403 propagação de “Authentication Problem”
+- Unitários: Testes em serviços com mocks
+- Controller: Testes isolados de endpoints com MockMvc
+- Funcionais: Testes integrados com casos diversos
 
-3. ProductPublicControllerTest (público):
-- 200 GET /products
-- 200 GET /products/{id}
+## Cobertura
 
-4. ProductServiceTest:
-- Sucesso 200/201 com corpo
-- Mapeamento de 401/403/404 para exceções específicas
-- Falha em status inesperado
+- AuthController: Login válido, inválido e validação de payload
+- ProductController: Autenticação, autorização, erros e sucesso
+- ProductPublicController: Listagem, criação e validação
+- ProductService: CRUD, conversão de DTOs e erros
+
+## Executar testes
+
+```
+mvn test
+```
+
+## Boas práticas
+
+- Cobertura ampla com testes parametrizados
+- Uso de Builders para criação fluente de dados
+- AssertJ para assertions expressivas
+- Validações completas com Bean Validation
+- Sanitização e prevenção de XSS
+- Isolamento com Mockito
+
+## Considerações finais
+Projeto com foco em qualidade, segurança e manutenção fácil.

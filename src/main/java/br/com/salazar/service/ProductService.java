@@ -1,5 +1,8 @@
 package br.com.salazar.service;
+
 import br.com.salazar.model.dto.*;
+import br.com.salazar.exception.ProductNotFoundException;
+import br.com.salazar.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +10,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
 
 @Service
 public class ProductService {
@@ -20,6 +25,35 @@ public class ProductService {
 
     public ProductService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    public ProductDto createProduct(ProductCreateRequestDto request) {
+        String url = baseUrl + "/products/add";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<ProductCreateRequestDto> requestEntity = new HttpEntity<>(request, headers);
+
+        try {
+            // Chama a API externa que retorna ProductResponseDto
+            ResponseEntity<ProductResponseDto> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, ProductResponseDto.class);
+
+            if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+                // CONVERSÃO: ProductResponseDto -> ProductDto
+                return convertToProductDto(response.getBody());
+            }
+            throw new RuntimeException("Falha ao criar produto (status: " + response.getStatusCode() + ")");
+
+        } catch (HttpClientErrorException e) {
+            log.error("Erro HTTP {} ao criar produto: {}", e.getStatusCode().value(), e.getResponseBodyAsString());
+
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                throw new ValidationException("Dados de produto inválidos: " + extractMessage(e.getResponseBodyAsString(), "Invalid product data"));
+            }
+            throw new RuntimeException("Erro ao criar produto: " + e.getMessage());
+        }
     }
 
     public ProductsResponseDto getProducts(String bearerToken) {
@@ -39,7 +73,6 @@ public class ProductService {
             }
             throw new RuntimeException("Resposta inesperada da API de produtos");
         } catch (HttpClientErrorException e) {
-            // Mapeia mensagens 401/403 vindas do DummyJSON
             String body = e.getResponseBodyAsString();
             log.warn("Erro HTTP {} ao buscar produtos: {}", e.getStatusCode().value(), body);
 
@@ -53,24 +86,6 @@ public class ProductService {
         }
     }
 
-    public ProductResponseDto createProduct(ProductCreateRequestDto body) {
-        String url = baseUrl + "/products/add";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<ProductCreateRequestDto> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<ProductResponseDto> response = restTemplate.exchange(
-                url, HttpMethod.POST, request, ProductResponseDto.class);
-
-        if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
-            return response.getBody();
-        }
-        // A API retorna 201; se vier 200/qualquer outro, trate como inesperado
-        throw new RuntimeException("Falha ao criar produto (status: " + response.getStatusCode() + ")");
-    }
-
     public ProductsResponseDto getAllProducts() {
         String url = baseUrl + "/products";
 
@@ -78,13 +93,18 @@ public class ProductService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        ResponseEntity<ProductsResponseDto> response = restTemplate.exchange(
-                url, HttpMethod.GET, request, ProductsResponseDto.class);
+        try {
+            ResponseEntity<ProductsResponseDto> response = restTemplate.exchange(
+                    url, HttpMethod.GET, request, ProductsResponseDto.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return response.getBody();
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            throw new RuntimeException("Falha ao buscar produtos (status: " + response.getStatusCode() + ")");
+        } catch (HttpClientErrorException e) {
+            log.error("Erro ao buscar produtos: {}", e.getMessage());
+            throw new RuntimeException("Erro ao buscar produtos", e);
         }
-        throw new RuntimeException("Falha ao buscar produtos (status: " + response.getStatusCode() + ")");
     }
 
     public ProductDto getProductById(Long id) {
@@ -94,19 +114,58 @@ public class ProductService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        ResponseEntity<ProductDto> response = restTemplate.exchange(
-                url, HttpMethod.GET, request, ProductDto.class);
+        try {
+            ResponseEntity<ProductDto> response = restTemplate.exchange(
+                    url, HttpMethod.GET, request, ProductDto.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return response.getBody();
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            throw new ProductNotFoundException("Produto não encontrado com id: " + id);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new ProductNotFoundException("Product not found with id: " + id);
+            }
+            log.error("Erro ao buscar produto {}: {}", id, e.getMessage());
+            throw new RuntimeException("Erro ao buscar produto", e);
         }
-        throw new RuntimeException("Falha ao buscar produto id=" + id + " (status: " + response.getStatusCode() + ")");
     }
 
+    // MÉTODO AUXILIAR: Converter ProductResponseDto para ProductDto
+    private ProductDto convertToProductDto(ProductResponseDto responseDto) {
+        ProductDto dto = new ProductDto();
+        dto.setId(responseDto.getId());
+        dto.setName(responseDto.getTitle()); // Mapeamento: title -> name
+        dto.setDescription(responseDto.getDescription());
+
+        // Conversão de Double para BigDecimal
+        if (responseDto.getPrice() != null) {
+            dto.setPrice(BigDecimal.valueOf(responseDto.getPrice()));
+        }
+
+        dto.setBrand(responseDto.getBrand());
+        dto.setCategory(responseDto.getCategory());
+        dto.setStockQuantity(responseDto.getStock()); // Mapeamento: stock -> stockQuantity
+
+        return dto;
+    }
+
+    private ProductResponseDto convertToProductResponseDto(ProductCreateRequestDto request) {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setTitle(request.getTitle());
+        dto.setDescription(request.getDescription());
+        dto.setPrice(request.getPrice());
+        dto.setDiscountPercentage(request.getDiscountPercentage());
+        dto.setRating(request.getRating());
+        dto.setStock(request.getStock());
+        dto.setBrand(request.getBrand());
+        dto.setCategory(request.getCategory());
+        dto.setThumbnail(request.getThumbnail());
+        return dto;
+    }
 
     private String extractMessage(String body, String defaultMsg) {
         try {
-            // parse simples sem ObjectMapper, para manter o serviço independente
             if (body != null && body.contains("message")) {
                 int idx = body.indexOf("\"message\"");
                 if (idx >= 0) {
@@ -125,8 +184,8 @@ public class ProductService {
     public static class UnauthorizedException extends RuntimeException {
         public UnauthorizedException(String msg) { super(msg); }
     }
+
     public static class ForbiddenException extends RuntimeException {
         public ForbiddenException(String msg) { super(msg); }
     }
-
 }

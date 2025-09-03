@@ -5,39 +5,46 @@ import jakarta.validation.constraints.*;
 public class ProductCreateRequestDto {
 
     @JsonProperty("title")
-    @NotBlank
+    @NotBlank(message = "Título do produto é obrigatório")
+    @Size(min = 3, max = 100, message = "Título deve ter entre 3 e 100 caracteres")
     private String title;
 
     @JsonProperty("description")
-    @NotBlank
+    @NotBlank(message = "Descrição é obrigatória")
     private String description;
 
     @JsonProperty("price")
-    @NotNull @Positive
+    @NotNull(message = "Preço é obrigatório")
+    @Positive(message = "Preço deve ser positivo")
     private Double price;
 
     @JsonProperty("discountPercentage")
-    @NotNull @DecimalMin("0.0") @DecimalMax("100.0")
+    @NotNull(message = "Desconto é obrigatório")
+    @DecimalMin(value = "0.0", message = "Desconto deve ser no mínimo 0%")
+    @DecimalMax(value = "100.0", message = "Desconto deve ser no máximo 100%")
     private Double discountPercentage;
 
     @JsonProperty("rating")
-    @NotNull @DecimalMin("0.0") @DecimalMax("5.0")
+    @NotNull(message = "Rating é obrigatório")
+    @DecimalMin(value = "0.0", message = "Rating deve ser no mínimo 0")
+    @DecimalMax(value = "5.0", message = "Rating deve ser no máximo 5")
     private Double rating;
 
     @JsonProperty("stock")
-    @NotNull @Min(0)
+    @NotNull(message = "Stock é obrigatório")
+    @Min(value = 0, message = "Stock não pode ser negativo")
     private Integer stock;
 
     @JsonProperty("brand")
-    @NotBlank
+    @NotBlank(message = "Marca é obrigatória")
     private String brand;
 
     @JsonProperty("category")
-    @NotBlank
+    @NotBlank(message = "Categoria é obrigatória")
     private String category;
 
     @JsonProperty("thumbnail")
-    @NotBlank
+    @NotBlank(message = "Thumbnail é obrigatório")
     private String thumbnail;
 
     public ProductCreateRequestDto() {}

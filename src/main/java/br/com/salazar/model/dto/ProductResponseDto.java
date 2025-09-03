@@ -11,6 +11,8 @@ public class ProductResponseDto {
     private String description;
     private String brand;
     private String category;
+    private Double discountPercentage;
+
 
     public ProductResponseDto() {}
 
@@ -84,5 +86,12 @@ public class ProductResponseDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Double getDiscountPercentage() {
+        return discountPercentage;
+    }
+    public void setDiscountPercentage(Double discountPercentage) {
+        this.discountPercentage = discountPercentage;
     }
 }

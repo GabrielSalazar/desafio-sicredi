@@ -1,6 +1,7 @@
 package br.com.salazar.controller;
+
 import br.com.salazar.model.dto.ProductCreateRequestDto;
-import br.com.salazar.model.dto.ProductResponseDto;
+import br.com.salazar.model.dto.ProductDto;
 import br.com.salazar.model.dto.ProductsResponseDto;
 import br.com.salazar.service.ProductService;
 import br.com.salazar.service.ProductService.ForbiddenException;
@@ -30,11 +31,12 @@ public class ProductController {
         ProductsResponseDto products = service.getProducts(token);
         return ResponseEntity.ok(products);
     }
-    @PostMapping("/products/add")
-    public ResponseEntity<ProductResponseDto> addProduct(
-            @Valid @RequestBody ProductCreateRequestDto payload) {
 
-        ProductResponseDto created = service.createProduct(payload);
+    @PostMapping("/products/add")
+    public ResponseEntity<ProductDto> addProduct( // FIXED: ProductResponseDto -> ProductDto
+                                                  @Valid @RequestBody ProductCreateRequestDto payload) {
+
+        ProductDto created = service.createProduct(payload); // FIXED: Agora compatível
         // A API externa retorna 201, então espelhamos
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -56,4 +58,3 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 }
-
